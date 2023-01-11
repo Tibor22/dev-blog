@@ -1,23 +1,28 @@
-import { NextPage } from 'next';
-import BlogCard from '../component/BlogCard';
+import { InferGetStaticPropsType, NextPage } from 'next';
+import BlogCard from '../components/BlogCard';
 
-interface Props {}
+interface PostApiResponse {
+	postInfo: { title: string; meta: string; slug: string }[];
+}
 
-const Blogs: NextPage<Props> = () => {
+type Props = InferGetStaticPropsType<typeof getStaticProps>;
+
+export async function getStaticProps() {
+	const res = await fetch('http://localhost:3000/api/posts');
+	const { postInfo }: PostApiResponse = await res.json();
+	return {
+		props: {
+			posts: postInfo,
+		},
+	};
+}
+
+const Blogs: NextPage<Props> = ({ posts }: Props) => {
 	return (
 		<div className='max-w-3xl p-10 mx-auto p-5 space-y-5'>
-			<BlogCard
-				title='First blog'
-				description='		Lorem ipsum dolor sit amet consectetur adipisicing elit. Doloremque dolor voluptatum unde necessitatibus. Nulla quasi itaque, cumque ipsum nesciunt sequi eos? Cumque iste, aut unde pariatur fugiat nobis dolorum.'
-			/>
-			<BlogCard
-				title='First blog'
-				description='		Lorem ipsum dolor sit amet consectetur adipisicing elit. Doloremque dolor voluptatum unde necessitatibus. Nulla quasi itaque, cumque ipsum nesciunt sequi eos? Cumque iste, aut unde pariatur fugiat nobis dolorum.'
-			/>
-			<BlogCard
-				title='First blog'
-				description='		Lorem ipsum dolor sit amet consectetur adipisicing elit. Doloremque dolor voluptatum unde necessitatibus. Nulla quasi itaque, cumque ipsum nesciunt sequi eos? Cumque iste, aut unde pariatur fugiat nobis dolorum.'
-			/>
+			{posts.map((post) => {
+				return <BlogCard title={post.title} description={post.meta} />;
+			})}
 		</div>
 	);
 };
