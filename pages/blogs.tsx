@@ -21,7 +21,13 @@ const Blogs: NextPage<Props> = ({ posts }: Props) => {
 	return (
 		<div className='max-w-3xl p-10 mx-auto p-5 space-y-5'>
 			{posts.map((post) => {
-				return <BlogCard title={post.title} description={post.meta} />;
+				return (
+					<BlogCard
+						slug={post.slug}
+						title={post.title}
+						description={post.meta}
+					/>
+				);
 			})}
 		</div>
 	);
