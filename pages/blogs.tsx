@@ -19,7 +19,7 @@ export async function getStaticProps() {
 
 const Blogs: NextPage<Props> = ({ posts }: Props) => {
 	return (
-		<div className='max-w-3xl p-10 mx-auto p-5 space-y-5'>
+		<div className='max-w-3xl mx-auto p-5 space-y-3'>
 			{posts.map((post) => {
 				return (
 					<BlogCard

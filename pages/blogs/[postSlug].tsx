@@ -1,18 +1,30 @@
-import { GetStaticPaths, GetStaticProps, NextPage } from 'next';
+import {
+	GetStaticPaths,
+	GetStaticProps,
+	InferGetStaticPropsType,
+	NextPage,
+} from 'next';
 import { useRouter } from 'next/router';
 import matter from 'gray-matter';
 import fs from 'fs';
 import path from 'path';
-interface Props {}
+import { ParsedUrlQuery } from 'querystring';
+import { MDXRemote, MDXRemoteSerializeResult } from 'next-mdx-remote';
+import { serialize } from 'next-mdx-remote/serialize';
 
-const SinglePage: NextPage<Props> = ({ data }) => {
+type Props = InferGetStaticPropsType<typeof getStaticProps>;
+
+const SinglePage: NextPage<Props> = ({ content, title }) => {
 	const router = useRouter();
 	console.log(router);
-	console.log('DATA:', data);
 	return (
-		<div className='bg-green-100 p-2 rounded'>
-			<h1 className='text-3xl text-gray-900 font-semibold'>{data[0].title}</h1>
-			<p className='text-gray-500'>{data[0].meta}</p>
+		<div className='max-w-max mx-auto'>
+			<h1 className='text-3xl text-gray-900 font-semibold mb-3 mt-3'>
+				{title}
+			</h1>
+			<div className='prose pb-20'>
+				<MDXRemote {...content} />
+			</div>
 		</div>
 	);
 };
@@ -32,23 +44,29 @@ export const getStaticPaths: GetStaticPaths = () => {
 	};
 };
 
-export const getStaticProps: GetStaticProps = (context) => {
-	const dirPathToRead = path.join(process.cwd(), 'posts');
-	const dirs = fs.readdirSync(dirPathToRead);
-	console.log('CONTEXT:', context);
-	const data = dirs
-		.map((filename) => {
-			const filePathToRead = path.join(process.cwd(), 'posts/' + filename);
-			const fileContent = fs.readFileSync(filePathToRead, { encoding: 'utf8' });
-			console.log(matter(fileContent).data.slug === context?.params.postSlug);
+interface IStaticProps extends ParsedUrlQuery {
+	postSlug: string;
+}
 
-			return matter(fileContent).data;
-		})
-		.filter((data) => data.slug === context?.params.postSlug);
-	console.log(data);
+type Post = {
+	title: string;
+	content: MDXRemoteSerializeResult;
+};
+
+export const getStaticProps: GetStaticProps<Post> = async (context) => {
+	const { postSlug } = context.params as IStaticProps;
+
+	const filePathToRead = path.join(process.cwd(), 'posts/' + postSlug + '.md');
+	const fileContent = fs.readFileSync(filePathToRead, { encoding: 'utf8' });
+
+	// const { data, content } = matter(fileContent);
+	const source: any = await serialize(fileContent, {
+		parseFrontmatter: true,
+	});
+
 	// return data;
 	return {
-		props: { data },
+		props: { title: source.frontmatter.title, content: source },
 	};
 };
 
